@@ -2,19 +2,44 @@ import { Link } from 'react-router-dom';
 import Navbar from '../../components/Navbar.jsx';
 import useGetTrendingContent from '../../hooks/useGetTrendingContent.jsx';
 import { ORIGINAL_IMG_BASE_URL } from '../../utils/constants.js';
+import { Play, Info } from 'lucide-react';
+import { useContentStore } from '../../store/content.js';
+import MovieSlider from '../../components/MovieSlider.jsx';
+import { MOVIE_CATEGORIES, TV_CATEGORIES } from '../../utils/constants.js';
+import { useState } from 'react';
 
 const HomeScreen = () => {
   const { trendingContent } = useGetTrendingContent();
-  console.log("trendingContent", trendingContent);
+  const { contentType } = useContentStore();  
+  const [imgLoading, setImgLoading] = useState(true);
+
+  if(!trendingContent) return(
+    <div className='h-screen text-white relative'>
+      <Navbar/>
+
+      {/* COOL OPTIMIZATION HACK FOR IMAGES */}
+      <div className='absolute top-0 left-0 w-full h-full bg-black/70 flex items-center justify-center -z-50 shimmer' />
+        <p className='text-lg'>Loading...</p>
+
+    </div>
+  )
+
   return (
     <>
     <div className='relative h-screen text-white'>
       <Navbar />
 
+      {imgLoading && (
+        <div className='absolute top-0 left-0 w-full h-full bg-black/70 flex items-center justify-center -z-50 shimmer' />
+      )}
+
       <img
         src={ORIGINAL_IMG_BASE_URL + trendingContent?.backdrop_path}
         alt="Hero img"
-        className='absolute top-0 left-0 w-full h-full object-cover -z-50'/>
+        className='absolute top-0 left-0 w-full h-full object-cover -z-50'
+        onLoad={() => {
+           setImgLoading(false);
+        }}/>
 
       <div className='absolute top-0 left-0 w-full h-full object-cover bg-black/50 -z-50 '  aria-hidden='true'/>
 
@@ -40,19 +65,25 @@ const HomeScreen = () => {
         </div>
 
         <div className='flext mt-8'>
-          <Link to="/watch/123"
+          <Link to={`/watch/${trendingContent?.id}`}
           className='bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded flex items-center'>
             <Play className='size-6 mr-2 fill-black'/>
             Play
           </Link>
 
-          <Link to="/watch/123"
+          <Link to={`/watch/${trendingContent?.id}`}
           className='bg-gray-500/70 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded flex items-center'>
             <Info className='size-6 mr-2'/>
             More Info
           </Link>
         </div>
       </div>
+    </div>
+
+    <div className='flex flex-col gap-10 bg-black py-10'>
+        {contentType === "movie"
+         ? MOVIE_CATEGORIES.map((category) => <MovieSlider key={category} category={category}/>)
+         :TV_CATEGORIES.map((category) => <TvShowSlider key={category} category={category}/>)}
     </div>
     </>
   )
